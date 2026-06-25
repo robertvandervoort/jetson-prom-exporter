@@ -4,7 +4,7 @@ Prometheus exporter for NVIDIA Jetson devices using the `jetson-stats` / `jtop`
 Python API for structured hardware metrics. A small supplemental `nvidia-smi
 dmon` poller remains for GPU dmon counters that jtop does not expose directly.
 
-> Last updated: 2026-06-25 13:22:33 CDT
+> Last updated: 2026-06-25 13:47:24 CDT
 
 ## Metrics
 
@@ -86,6 +86,19 @@ Quick smoke check:
 ```bash
 curl -fsS http://localhost:9101/metrics | grep -E 'jetson_jtop_up|jetson_jtop_cpu_utilization_percent' | head
 ```
+
+## Grafana
+
+A starter dashboard is included at:
+
+```text
+grafana/jetson-thor-hardware.json
+```
+
+It is organized into sections for overview, platform/runtime, CPU and process
+activity, GPU and accelerator engines, memory/swap/EMC, disk/network, and
+power/fans/thermal limits. It expects a Prometheus datasource with UID
+`prometheus`.
 
 ## Development
 

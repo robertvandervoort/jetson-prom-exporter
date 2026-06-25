@@ -1,0 +1,403 @@
+{
+  "uid": "jetson-thor-hw",
+  "title": "Jetson Thor Hardware - jtop",
+  "tags": ["jetson", "hardware", "gpu", "thor", "jtop"],
+  "timezone": "browser",
+  "editable": true,
+  "schemaVersion": 38,
+  "version": 3,
+  "time": {"from": "now-1h", "to": "now"},
+  "refresh": "30s",
+  "templating": {"list": []},
+  "annotations": {"list": []},
+  "panels": [
+    {"id": 1, "type": "row", "title": "Overview", "gridPos": {"x": 0, "y": 0, "w": 24, "h": 1}, "collapsed": false},
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Exporter / jtop Up",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 1, "w": 3, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "bool_on_off", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "jetson_jtop_up", "legendFormat": "jtop"}]
+    },
+    {
+      "id": 3,
+      "type": "gauge",
+      "title": "CPU Active",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 3, "y": 1, "w": 3, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "targets": [{"expr": "avg(jetson_jtop_cpu_utilization_percent{mode=\"active\"})", "legendFormat": "avg active"}]
+    },
+    {
+      "id": 4,
+      "type": "gauge",
+      "title": "RAM Used",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 6, "y": 1, "w": 3, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 75}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_memory_bytes{memory=\"ram\",state=\"used\"} / ignoring(state) jetson_jtop_memory_bytes{memory=\"ram\",state=\"tot\"} * 100", "legendFormat": "RAM"}]
+    },
+    {
+      "id": 5,
+      "type": "gauge",
+      "title": "GPU Utilization",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 9, "y": 1, "w": 3, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "targets": [{"expr": "jetson_nvidia_smi_gpu_utilization_percent", "legendFormat": "nvidia-smi"}]
+    },
+    {
+      "id": 6,
+      "type": "gauge",
+      "title": "Hottest Thermal Zone",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 1, "w": 3, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "celsius", "min": 0, "max": 110, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 75}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "targets": [{"expr": "max(jetson_jtop_temperature_celsius{state=\"temp\"})", "legendFormat": "max temp"}]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Total Power",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 15, "y": 1, "w": 3, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "watt"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "jetson_jtop_power_watts{rail=\"total\",state=\"current\"}", "legendFormat": "current"}]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "GPU Process Memory",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 18, "y": 1, "w": 3, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "sum(jetson_nvidia_smi_process_gpu_memory_bytes) or vector(0)", "legendFormat": "gpu memory"}]
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Uptime",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 21, "y": 1, "w": 3, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "jetson_jtop_uptime_seconds", "legendFormat": "uptime"}]
+    },
+
+    {"id": 10, "type": "row", "title": "Platform And Runtime", "gridPos": {"x": 0, "y": 5, "w": 24, "h": 1}, "collapsed": false},
+    {
+      "id": 11,
+      "type": "table",
+      "title": "Board / JetPack / Library Info",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 6, "w": 10, "h": 8},
+      "targets": [
+        {"expr": "jetson_jtop_board_info", "format": "table", "instant": true, "legendFormat": "board"},
+        {"expr": "jetson_jtop_library_info", "format": "table", "instant": true, "legendFormat": "{{library}} {{version}}"}
+      ]
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Power Mode / Clocks / GPU Identity",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 10, "y": 6, "w": 7, "h": 8},
+      "targets": [
+        {"expr": "jetson_jtop_nvpmodel_info", "format": "table", "instant": true, "legendFormat": "nvpmodel"},
+        {"expr": "jetson_jtop_jetson_clocks_enabled", "format": "table", "instant": true, "legendFormat": "jetson_clocks enabled"},
+        {"expr": "jetson_jtop_jetson_clocks_boot_enabled", "format": "table", "instant": true, "legendFormat": "jetson_clocks boot"},
+        {"expr": "jetson_nvidia_smi_gpu_info", "format": "table", "instant": true, "legendFormat": "gpu"}
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Exporter Health",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 17, "y": 6, "w": 7, "h": 8},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "targets": [
+        {"expr": "jetson_jtop_up", "legendFormat": "jtop up"},
+        {"expr": "increase(jetson_jtop_scrape_errors_total[5m])", "legendFormat": "jtop scrape errors / 5m"}
+      ]
+    },
+
+    {"id": 20, "type": "row", "title": "CPU And Process Activity", "gridPos": {"x": 0, "y": 14, "w": 24, "h": 1}, "collapsed": false},
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "CPU Active By Core",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 15, "w": 8, "h": 8},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_cpu_utilization_percent{mode=\"active\"}", "legendFormat": "cpu {{cpu}}"}]
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "CPU Utilization Modes",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 8, "y": 15, "w": 8, "h": 8},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}, "overrides": []},
+      "targets": [{"expr": "avg by (mode) (jetson_jtop_cpu_utilization_percent)", "legendFormat": "{{mode}}"}]
+    },
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "CPU Frequency By Core",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 16, "y": 15, "w": 8, "h": 8},
+      "fieldConfig": {"defaults": {"unit": "hertz"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_cpu_frequency_hertz{state=\"cur\"}", "legendFormat": "cpu {{cpu}}"}]
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "CPU Online Cores",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 23, "w": 4, "h": 5},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "sum(jetson_jtop_cpu_online)", "legendFormat": "online"}]
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "CPU / SoC Temperatures",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 4, "y": 23, "w": 10, "h": 5},
+      "fieldConfig": {"defaults": {"unit": "celsius"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_temperature_celsius{state=\"temp\",zone=~\"cpu|tj|Composite|soc.*|Sensor.*\"}", "legendFormat": "{{zone}}"}]
+    },
+    {
+      "id": 26,
+      "type": "table",
+      "title": "CPU Governors / Models",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 14, "y": 23, "w": 10, "h": 5},
+      "targets": [{"expr": "jetson_jtop_cpu_info", "format": "table", "instant": true, "legendFormat": "cpu {{cpu}}"}]
+    },
+    {
+      "id": 27,
+      "type": "timeseries",
+      "title": "GPU Process CPU Utilization",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 28, "w": 12, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_process_cpu_utilization_percent", "legendFormat": "{{process_name}} {{pid}}"}]
+    },
+    {
+      "id": 28,
+      "type": "timeseries",
+      "title": "GPU Process Resident Memory",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 28, "w": 12, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_process_memory_bytes", "legendFormat": "{{process_name}} {{pid}}"}]
+    },
+
+    {"id": 40, "type": "row", "title": "GPU And Accelerator Engines", "gridPos": {"x": 0, "y": 35, "w": 24, "h": 1}, "collapsed": false},
+    {
+      "id": 41,
+      "type": "timeseries",
+      "title": "GPU Utilization / Memory Controller",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 36, "w": 8, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}, "overrides": []},
+      "targets": [
+        {"expr": "jetson_nvidia_smi_gpu_utilization_percent", "legendFormat": "gpu"},
+        {"expr": "jetson_nvidia_smi_gpu_memory_utilization_percent", "legendFormat": "memory controller"}
+      ]
+    },
+    {
+      "id": 42,
+      "type": "timeseries",
+      "title": "GPU Temperature / Power",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 8, "y": 36, "w": 8, "h": 7},
+      "targets": [
+        {"expr": "jetson_nvidia_smi_gpu_temperature_celsius", "legendFormat": "gpu temp C"},
+        {"expr": "jetson_nvidia_smi_gpu_power_draw_watts", "legendFormat": "gpu power W"},
+        {"expr": "jetson_jtop_temperature_celsius{zone=\"gpu\",state=\"temp\"}", "legendFormat": "jtop gpu temp C"}
+      ]
+    },
+    {
+      "id": 43,
+      "type": "timeseries",
+      "title": "GPU Process Memory",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 16, "y": 36, "w": 8, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "targets": [{"expr": "jetson_nvidia_smi_process_gpu_memory_bytes", "legendFormat": "{{process_name}} {{pid}}"}]
+    },
+    {
+      "id": 44,
+      "type": "timeseries",
+      "title": "nvidia-smi dmon Utilization",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 43, "w": 8, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}, "overrides": []},
+      "targets": [{"expr": "jetson_nvidia_smi_dmon_utilization_percent", "legendFormat": "{{unit}}"}]
+    },
+    {
+      "id": 45,
+      "type": "timeseries",
+      "title": "Engine Frequencies",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 8, "y": 43, "w": 8, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "hertz"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_engine_frequency_hertz{state=\"cur\"}", "legendFormat": "{{group}} {{engine}}"}]
+    },
+    {
+      "id": 46,
+      "type": "timeseries",
+      "title": "Engine Online State / GPU Errors",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 16, "y": 43, "w": 8, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "targets": [
+        {"expr": "jetson_jtop_engine_online", "legendFormat": "{{group}} {{engine}} online"},
+        {"expr": "sum(jetson_nvidia_smi_dmon_ecc_errors) or vector(0)", "legendFormat": "ecc errors"},
+        {"expr": "jetson_nvidia_smi_dmon_pcie_replay_errors or vector(0)", "legendFormat": "pcie replay errors"}
+      ]
+    },
+    {
+      "id": 47,
+      "type": "table",
+      "title": "GPU Process Table",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 50, "w": 24, "h": 7},
+      "targets": [
+        {"expr": "jetson_jtop_process_info", "format": "table", "instant": true, "legendFormat": "process info"},
+        {"expr": "jetson_nvidia_smi_process_gpu_memory_bytes", "format": "table", "instant": true, "legendFormat": "gpu memory"}
+      ]
+    },
+
+    {"id": 60, "type": "row", "title": "Memory, Swap, And EMC", "gridPos": {"x": 0, "y": 57, "w": 24, "h": 1}, "collapsed": false},
+    {
+      "id": 61,
+      "type": "timeseries",
+      "title": "RAM Breakdown",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 58, "w": 8, "h": 8},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_memory_bytes{memory=\"ram\",state=~\"used|free|cached|buffers|shared\"}", "legendFormat": "{{state}}"}]
+    },
+    {
+      "id": 62,
+      "type": "timeseries",
+      "title": "RAM / Swap Utilization",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 8, "y": 58, "w": 8, "h": 8},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}, "overrides": []},
+      "targets": [
+        {"expr": "jetson_jtop_memory_bytes{memory=\"ram\",state=\"used\"} / ignoring(state) jetson_jtop_memory_bytes{memory=\"ram\",state=\"tot\"} * 100", "legendFormat": "ram used"},
+        {"expr": "(jetson_jtop_memory_bytes{memory=\"swap\",state=\"used\"} / ignoring(state) jetson_jtop_memory_bytes{memory=\"swap\",state=\"tot\"} * 100) or vector(0)", "legendFormat": "swap used"}
+      ]
+    },
+    {
+      "id": 63,
+      "type": "timeseries",
+      "title": "EMC Utilization / Frequency",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 16, "y": 58, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "jetson_jtop_emc_utilization_percent", "legendFormat": "emc util %"},
+        {"expr": "jetson_jtop_emc_frequency_hertz{state=\"cur\"}", "legendFormat": "emc current hz"}
+      ]
+    },
+
+    {"id": 70, "type": "row", "title": "Disk And Network", "gridPos": {"x": 0, "y": 66, "w": 24, "h": 1}, "collapsed": false},
+    {
+      "id": 71,
+      "type": "timeseries",
+      "title": "Disk Capacity",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 67, "w": 8, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_disk_bytes", "legendFormat": "{{state}}"}]
+    },
+    {
+      "id": 72,
+      "type": "gauge",
+      "title": "Disk Used",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 8, "y": 67, "w": 4, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 75}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_disk_bytes{state=\"used\"} / ignoring(state) jetson_jtop_disk_bytes{state=\"total\"} * 100", "legendFormat": "disk used"}]
+    },
+    {
+      "id": 73,
+      "type": "stat",
+      "title": "Disk Available",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 67, "w": 4, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "jetson_jtop_disk_bytes{state=\"available\"}", "legendFormat": "available"}]
+    },
+    {
+      "id": 74,
+      "type": "table",
+      "title": "Local Network Interfaces",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 16, "y": 67, "w": 8, "h": 7},
+      "targets": [{"expr": "jetson_jtop_local_interface_info", "format": "table", "instant": true, "legendFormat": "{{interface}} {{address}}"}]
+    },
+
+    {"id": 80, "type": "row", "title": "Power, Fans, And Thermal Limits", "gridPos": {"x": 0, "y": 74, "w": 24, "h": 1}, "collapsed": false},
+    {
+      "id": 81,
+      "type": "timeseries",
+      "title": "Power Rails",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 75, "w": 8, "h": 8},
+      "fieldConfig": {"defaults": {"unit": "watt"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_power_watts{state=~\"current|average\"}", "legendFormat": "{{rail}} {{state}}"}]
+    },
+    {
+      "id": 82,
+      "type": "timeseries",
+      "title": "Rail Voltage / Current",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 8, "y": 75, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "jetson_jtop_power_volts", "legendFormat": "{{rail}} volts"},
+        {"expr": "jetson_jtop_power_amps", "legendFormat": "{{rail}} amps"}
+      ]
+    },
+    {
+      "id": 83,
+      "type": "timeseries",
+      "title": "Fan Speed / RPM",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 16, "y": 75, "w": 8, "h": 8},
+      "targets": [
+        {"expr": "jetson_jtop_fan_speed_percent", "legendFormat": "{{fan}} speed {{index}}"},
+        {"expr": "jetson_jtop_fan_rpm", "legendFormat": "{{fan}} rpm {{index}}"}
+      ]
+    },
+    {
+      "id": 84,
+      "type": "timeseries",
+      "title": "Thermal Limits",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 83, "w": 12, "h": 7},
+      "fieldConfig": {"defaults": {"unit": "celsius"}, "overrides": []},
+      "targets": [{"expr": "jetson_jtop_temperature_celsius{state=~\"max|crit\",zone!~\"Sensor.*\"}", "legendFormat": "{{zone}} {{state}}"}]
+    },
+    {
+      "id": 85,
+      "type": "table",
+      "title": "Fan Control Info",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 83, "w": 12, "h": 7},
+      "targets": [{"expr": "jetson_jtop_fan_info", "format": "table", "instant": true, "legendFormat": "{{fan}}"}]
+    }
+  ]
+}
