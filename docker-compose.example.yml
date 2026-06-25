@@ -1,0 +1,15 @@
+services:
+  jetson-exporter:
+    build: .
+    restart: unless-stopped
+    pid: host
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    ports:
+      - "9101:9101"
+    volumes:
+      - /run/jtop.sock:/run/jtop.sock:ro
+    command:
+      - --port=9101
+      - --nvidia-smi-path=/usr/sbin/nvidia-smi

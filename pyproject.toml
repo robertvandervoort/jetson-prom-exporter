@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jetson-prom-exporter"
+version = "0.1.0"
+description = "Prometheus exporter for NVIDIA Jetson devices (jtop + nvidia-smi dmon)"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+    "jetson-stats",
+    "prometheus_client>=0.20",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+]
+
+[project.scripts]
+jetson-prom-exporter = "jetson_prom_exporter.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
