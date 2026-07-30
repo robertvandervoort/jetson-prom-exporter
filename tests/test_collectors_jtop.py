@@ -69,7 +69,6 @@ def _payload() -> dict:
         "fan": {"pwm-fan": {"speed": [40], "rpm": [2500], "profile": "cool", "governor": "pid", "control": "auto"}},
         "disk": {"total": 128, "used": 64, "available": 60, "available_no_root": 58},
         "processes": [[1234, "robert", "I", "Graphic", 20, "R", 12.5, 2048, 1024, "demo"]],
-        "local_interfaces": {"hostname": "chip", "interfaces": {"eth0": ["192.168.50.1"]}},
     }
 
 

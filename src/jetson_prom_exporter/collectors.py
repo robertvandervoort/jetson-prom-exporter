@@ -75,11 +75,6 @@ JTOP_PROCESS_INFO = Gauge(
 JTOP_PROCESS_CPU = Gauge("jetson_jtop_process_cpu_utilization_percent", "GPU process CPU utilization", ["pid", "process_name"])
 JTOP_PROCESS_MEMORY_BYTES = Gauge("jetson_jtop_process_memory_bytes", "GPU process resident memory", ["pid", "process_name"])
 JTOP_PROCESS_GPU_MEMORY_BYTES = Gauge("jetson_jtop_process_gpu_memory_bytes", "GPU process memory", ["pid", "process_name"])
-JTOP_LOCAL_INTERFACE_INFO = Gauge(
-    "jetson_jtop_local_interface_info",
-    "Local network interface addresses from jtop",
-    ["hostname", "interface", "address"],
-)
 
 # --- supplemental nvidia-smi dmon metrics ---
 NVIDIA_SMI_GPU_INFO = Info("jetson_nvidia_smi_gpu", "GPU info labels from nvidia-smi")
@@ -191,7 +186,6 @@ class JtopCollector(threading.Thread):
         cls._update_fans(payload, set_labelled)
         cls._update_disk(payload, set_labelled)
         cls._update_processes(payload, set_labelled)
-        cls._update_local_interfaces(payload, set_labelled)
         tracker.reconcile(observed)
 
     @staticmethod
@@ -364,19 +358,6 @@ class JtopCollector(threading.Thread):
             set_labelled(JTOP_PROCESS_CPU, (pid_label, name_label), as_number(cpu_pct))
             set_labelled(JTOP_PROCESS_MEMORY_BYTES, (pid_label, name_label), kb_to_bytes(mem))
             set_labelled(JTOP_PROCESS_GPU_MEMORY_BYTES, (pid_label, name_label), kb_to_bytes(gpu_mem))
-
-    @staticmethod
-    def _update_local_interfaces(payload: dict[str, Any], set_labelled: Any) -> None:
-        local = as_mapping(payload.get("local_interfaces"))
-        hostname = str(local.get("hostname", "unknown"))
-        for interface, addresses in as_mapping(local.get("interfaces")).items():
-            if isinstance(addresses, str):
-                addresses = [addresses]
-            if not isinstance(addresses, list):
-                continue
-            for address in addresses:
-                set_labelled(JTOP_LOCAL_INTERFACE_INFO, (hostname, str(interface), str(address)), 1.0)
-
 
 # ---------------------------------------------------------------------------
 # supplemental nvidia-smi dmon collector thread

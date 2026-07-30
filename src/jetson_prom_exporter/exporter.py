@@ -7,6 +7,7 @@ import logging
 from prometheus_client import start_http_server
 
 from .collectors import JtopCollector, NvidiaSmiCollector
+from .host_connectivity import HostConnectivityCollector
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +30,10 @@ def run(
     )
 
     jtop.start()
+    connectivity = HostConnectivityCollector.from_environment(
+        interval_sec=interval_ms / 1000.0,
+    )
+    connectivity.start()
     if enable_nvidia_smi_dmon:
         smi = NvidiaSmiCollector(
             interval_sec=interval_ms / 1000.0,

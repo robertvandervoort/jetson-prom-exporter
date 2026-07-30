@@ -4,12 +4,19 @@ services:
     restart: unless-stopped
     pid: host
     runtime: nvidia
+    network_mode: host
+    # Host BlueZ D-Bus is blocked by the default container AppArmor profile.
+    security_opt:
+      - apparmor:unconfined
+    cap_add:
+      - NET_RAW
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
-    ports:
-      - "9101:9101"
+      - CHIP_LINK_PEERS=${CHIP_LINK_PEERS:-}
     volumes:
       - /run/jtop.sock:/run/jtop.sock:ro
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro
+      - /etc/machine-id:/etc/machine-id:ro
     command:
       - --port=9101
       - --nvidia-smi-path=/usr/sbin/nvidia-smi

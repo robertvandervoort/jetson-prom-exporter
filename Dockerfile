@@ -1,10 +1,18 @@
-FROM python:3.12-slim
+FROM nas:443/docker/library/python:3.12-slim
+
+ARG PIP_INDEX_URL=http://nas:3141/root/pypi/+simple/
+ARG PIP_TRUSTED_HOST=nas
+ENV PIP_INDEX_URL=${PIP_INDEX_URL} \
+    PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST}
 
 WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends bluez dbus iputils-ping iw \
+    && rm -rf /var/lib/apt/lists/*
 COPY pyproject.toml .
 COPY src/ src/
 COPY wheelhouse/ wheelhouse/
-RUN pip install --no-cache-dir --timeout 120 --retries 10 prometheus_client distro smbus2 setuptools wheel \
+RUN pip install --no-cache-dir --timeout 120 --retries 10 dbus-next prometheus_client distro smbus2 setuptools wheel \
     && if ls wheelhouse/jetson_stats-*.whl >/dev/null 2>&1; then \
         pip install --no-cache-dir --no-deps wheelhouse/jetson_stats-*.whl; \
     else \
