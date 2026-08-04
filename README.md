@@ -4,7 +4,7 @@ Prometheus exporter for NVIDIA Jetson devices using the `jetson-stats` / `jtop`
 Python API for structured hardware metrics. A small supplemental `nvidia-smi
 dmon` poller remains for GPU dmon counters that jtop does not expose directly.
 
-> Last updated: 2026-06-25 13:47:24 CDT
+> Last updated: 2026-08-04 15:07:16 CDT
 
 ## Metrics
 
@@ -44,10 +44,15 @@ On a Jetson host, install the host-side jtop prerequisites first:
 
 The script installs:
 
-- `jetson-stats` / `jtop` into the host Python environment.
+- `jetson-stats` / `jtop` into the host Python environment (via NAS
+  `devpi` at `nas:3141` by default; override with `PIP_INDEX_URL` /
+  `PIP_TRUSTED_HOST`).
 - `python3-prometheus-client` for host-side smoke tests.
-- `jtop.service`, enabled and started through systemd.
+- `jtop.service` via `jtop --install-service`, then enabled and started.
 - The invoking user in the `jtop` group when applicable.
+
+`pip install jetson-stats` alone is not enough on current releases — the
+systemd unit is only registered by `jtop --install-service`.
 
 If your user was newly added to the `jtop` group, log out and back in before
 running jtop clients directly as that user. Containers that run as root can use
