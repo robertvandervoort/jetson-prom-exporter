@@ -14,7 +14,7 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - CHIP_LINK_PEERS=${CHIP_LINK_PEERS:-}
     volumes:
-      - /run/jtop.sock:/run/jtop.sock:ro
+      - /run/jtop:/run/jtop:ro
       - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro
       - /etc/machine-id:/etc/machine-id:ro
     command:

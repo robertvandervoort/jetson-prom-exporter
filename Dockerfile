@@ -19,6 +19,10 @@ RUN pip install --no-cache-dir --timeout 120 --retries 10 dbus-next prometheus_c
         pip install --no-cache-dir --timeout 120 --retries 10 --no-build-isolation --no-deps jetson-stats; \
     fi
 
+# jtop's client hard-codes /run/jtop.sock; the host /run/jtop directory is
+# mounted instead of the socket file so a restarted jtop stays reachable.
+RUN ln -s /run/jtop/jtop.sock /run/jtop.sock
+
 ENV PYTHONPATH=/app/src
 EXPOSE 9101
 ENTRYPOINT ["python", "-m", "jetson_prom_exporter"]

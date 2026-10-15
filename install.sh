@@ -22,16 +22,13 @@ python3 -m pip install -U jetson-stats --break-system-packages
 # jetson-stats >=5 no longer drops the unit from pip alone; install + enable explicitly.
 # Always restart so a pip upgrade cannot leave an old daemon version on the socket.
 jtop --install-service
+install -d -o root -g root -m 0755 /etc/systemd/system/jtop.service.d
+install -o root -g root -m 0644 "$(dirname "$(readlink -f "$0")")"/systemd/jtop.service.d/*.conf \
+  /etc/systemd/system/jtop.service.d/
 systemctl daemon-reload
 systemctl enable jtop.service
+# Returns once socket-dir.conf's ExecStartPost has linked /run/jtop/jtop.sock.
 systemctl restart jtop.service
-# Brief settle — restart returns before /run/jtop.sock is recreated.
-for _ in $(seq 1 20); do
-  if [[ -S /run/jtop.sock ]] && systemctl is-active --quiet jtop.service; then
-    break
-  fi
-  sleep 0.25
-done
 
 if [[ -n "${TARGET_USER}" && "${TARGET_USER}" != "root" ]] && getent group jtop >/dev/null; then
   usermod -aG jtop "${TARGET_USER}"
@@ -40,6 +37,7 @@ fi
 echo "Verifying jtop.service..."
 systemctl is-active --quiet jtop.service
 test -S /run/jtop.sock
+test -S /run/jtop/jtop.sock
 
 echo "Verifying jtop Python API as root..."
 python3 - <<'PY'
@@ -58,7 +56,7 @@ Host setup complete.
 
 If ${TARGET_USER:-your user} was just added to the jtop group, log out and back in
 before running jtop clients as that user. Docker containers that run as root can
-use /run/jtop.sock immediately when it is mounted into the container.
+use the socket immediately when /run/jtop is mounted into the container.
 
 Next step from /opt/chip (compose file depends on host role):
   docker compose -f docker-compose.nano.yml up -d --force-recreate nano-jetson-exporter

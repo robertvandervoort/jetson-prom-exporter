@@ -79,8 +79,14 @@ wheel time out.
 Requires:
 
 - `jetson-stats` installed on the Jetson host.
-- `jtop.service` running and exposing `/run/jtop.sock`.
-- `/run/jtop.sock` bind-mounted into the exporter container.
+- `jtop.service` running with the `systemd/jtop.service.d/` drop-ins that
+  `install.sh` installs: `restart.conf` (`Restart=always`; jtop exits 0 when an
+  nvpmodel query times out) and `socket-dir.conf` (hard-links the socket to
+  `/run/jtop/jtop.sock` on every start).
+- `/run/jtop` (the directory) bind-mounted into the exporter container. The
+  image points `/run/jtop.sock` at it. Mounting the socket file itself pins the
+  inode that existed at container start, so the exporter could never reconnect
+  after a jtop restart.
 - `runtime: nvidia` for the supplemental `nvidia-smi dmon` collector.
 - `pid: host` for host process visibility.
 
