@@ -58,8 +58,8 @@ If ${TARGET_USER:-your user} was just added to the jtop group, log out and back 
 before running jtop clients as that user. Docker containers that run as root can
 use the socket immediately when /run/jtop is mounted into the container.
 
-Next step from /opt/chip (compose file depends on host role):
-  docker compose -f docker-compose.nano.yml up -d --force-recreate nano-jetson-exporter
-  # or
-  docker compose -f docker-compose.nano-two.yml up -d --force-recreate nano-two-jetson-exporter
+Next step from /opt/chip, with the compose file for this host
+(docker-compose.yml on chip, docker-compose.nano.yml on chip-nano,
+docker-compose.nano-two.yml on chip-nano-two):
+  docker compose -f <compose file> up -d --force-recreate jetson-exporter
 EOF
