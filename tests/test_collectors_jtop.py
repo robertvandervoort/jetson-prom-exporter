@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import logging
+import threading
+
+import pytest
 from prometheus_client import REGISTRY
 
 from jetson_prom_exporter.collectors import JtopCollector, LabelTracker
@@ -93,3 +97,59 @@ def test_update_from_payload_removes_stale_labelled_metrics() -> None:
     JtopCollector.update_from_payload(missing_fan, tracker)
 
     assert _sample_value("jetson_jtop_fan_rpm", {"fan": "pwm-fan", "index": "0"}) is None
+
+
+class _StopRun(BaseException):
+    pass
+
+
+def _run_until(collector: JtopCollector, delays: list[float], attempts: int) -> None:
+    def sleep(delay: float) -> None:
+        delays.append(delay)
+        if len(delays) == attempts:
+            raise _StopRun
+
+    collector._sleep = sleep
+    try:
+        collector.run()
+    except _StopRun:
+        pass
+
+
+def test_jtop_failures_back_off_to_a_cap_with_one_line_each(caplog: pytest.LogCaptureFixture) -> None:
+    session_threads: list[threading.Thread] = []
+
+    def unavailable(**_: object) -> object:
+        session_threads.append(threading.current_thread())
+        raise RuntimeError("The jtop.service is not active. Please run:\nsudo jtop --install-service")
+
+    delays: list[float] = []
+    with caplog.at_level(logging.WARNING, logger="jetson_prom_exporter.collectors"):
+        _run_until(JtopCollector(jtop_factory=unavailable), delays, attempts=6)
+
+    assert delays == [5.0, 10.0, 20.0, 40.0, 60.0, 60.0]
+    # A fresh thread per session: jtop's manager proxies cache a dead
+    # connection per thread after jtop.service restarts.
+    assert len(set(map(id, session_threads))) == 6
+    assert threading.current_thread() not in session_threads
+    assert _sample_value("jetson_jtop_up", {}) == 0.0
+    assert len(caplog.records) == 6
+    record = caplog.records[0]
+    assert record.exc_info is None
+    assert record.getMessage() == (
+        "jtop collection failed: RuntimeError: The jtop.service is not active. Please run:; retrying in 5s"
+    )
+
+
+def test_jtop_backoff_resets_after_a_session_that_sampled() -> None:
+    outcomes = iter([False, False, True, False])
+
+    class Flaky(JtopCollector):
+        def _stream(self) -> None:
+            self._sampled = next(outcomes)
+            raise ConnectionError("lost")
+
+    delays: list[float] = []
+    _run_until(Flaky(), delays, attempts=4)
+
+    assert delays == [5.0, 10.0, 5.0, 10.0]

@@ -6,7 +6,7 @@ import logging
 import subprocess
 import threading
 import time
-from typing import Any
+from typing import Any, Callable
 
 from prometheus_client import Counter, Gauge, Info
 
@@ -130,24 +130,63 @@ class LabelTracker:
 # ---------------------------------------------------------------------------
 
 
+RECONNECT_INITIAL_SEC = 5.0
+RECONNECT_MAX_SEC = 60.0
+
+
 class JtopCollector(threading.Thread):
     """Reads structured Jetson metrics from the jtop Python API."""
 
-    def __init__(self, interval_ms: int = 30000, jtop_factory: Any | None = None):
+    def __init__(
+        self,
+        interval_ms: int = 30000,
+        jtop_factory: Any | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+    ):
         super().__init__(daemon=True, name="jtop-collector")
         self.interval_sec = interval_ms / 1000.0
         self._jtop_factory = jtop_factory
+        self._sleep = sleep
         self._labels = LabelTracker()
+        self._sampled = False
 
     def run(self) -> None:
+        delay = RECONNECT_INITIAL_SEC
         while True:
-            try:
-                self._stream()
-            except Exception:
+            self._sampled = False
+            exc = self._run_session()
+            if exc is not None:
                 JTOP_UP.set(0)
                 JTOP_SCRAPE_ERRORS.inc()
-                log.exception("jtop collection failed, reconnecting in 5s")
-                time.sleep(5)
+                if self._sampled:
+                    delay = RECONNECT_INITIAL_SEC
+                reason = str(exc).splitlines()[0] if str(exc) else ""
+                log.warning(
+                    "jtop collection failed: %s: %s; retrying in %.0fs",
+                    type(exc).__name__,
+                    reason,
+                    delay,
+                )
+                self._sleep(delay)
+                delay = min(delay * 2, RECONNECT_MAX_SEC)
+
+    def _run_session(self) -> Exception | None:
+        # jtop's client is a multiprocessing manager. Its proxies cache the
+        # server connection per thread and never drop it, so once jtop.service
+        # restarts every later client on the same thread fails with
+        # BrokenPipeError. Each session therefore gets a fresh thread.
+        errors: list[Exception] = []
+
+        def session() -> None:
+            try:
+                self._stream()
+            except Exception as exc:
+                errors.append(exc)
+
+        worker = threading.Thread(target=session, daemon=True, name="jtop-session")
+        worker.start()
+        worker.join()
+        return errors[0] if errors else None
 
     def _load_jtop_factory(self) -> Any:
         if self._jtop_factory is not None:
@@ -162,6 +201,7 @@ class JtopCollector(threading.Thread):
         with factory(interval=self.interval_sec) as jetson:
             while jetson.ok():
                 JTOP_UP.set(1)
+                self._sampled = True
                 self.update_from_payload(capture_jtop_payload(jetson), self._labels)
         JTOP_UP.set(0)
 
